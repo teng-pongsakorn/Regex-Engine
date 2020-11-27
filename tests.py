@@ -15,6 +15,8 @@ class RegexEngineTest(unittest.TestCase):
         self.assertEqual(regex.check_one_char('7', '7'), True)
         self.assertEqual(regex.check_one_char('6', '7'), False)
         self.assertEqual(regex.check_one_char('a', '.'), False)
+        self.assertEqual(regex.check_one_char('.', '.', literal=True), True)
+        self.assertEqual(regex.check_one_char('.', 'a', literal=True), False)
 
     def test_check_one_by_one(self):
         # test 1-character input
@@ -103,6 +105,14 @@ class RegexEngineTest(unittest.TestCase):
         self.assertEqual(regex.check_regex_with_plus_sign("^no+pe$", "noooooooope"), True)
         self.assertEqual(regex.check_regex_with_plus_sign("^n.+pe$", 'noooooooope'), True)
         self.assertEqual(regex.check_regex_with_plus_sign("^n.+p$", 'noooooooope'), False)
+
+    def test_escaping(self):
+        self.assertEqual(regex.match('\\.$', 'end.'), True)
+        self.assertEqual(regex.match('3\\+3', '3+3=6'), True)
+        self.assertEqual(regex.match('\\?', 'Is this working?'), True)
+        self.assertEqual(regex.match('\\\\', '\\'), True)
+        self.assertEqual(regex.match('colou\\?r', 'color'), False)
+        self.assertEqual(regex.match('colou\\?r', 'colour'), False)
 
 
 if __name__ == '__main__':

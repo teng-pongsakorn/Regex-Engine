@@ -5,31 +5,35 @@ import sys
 sys.setrecursionlimit(10000)
 
 
-def check_one_char(regex, char):
-    return (regex == char) or (regex == '.') or (regex == '')
+def check_one_char(regex, char, literal=False):
+    if not literal:
+        return (regex == char) or (regex == '.') or (regex == '')
+    return regex == char
 
 
 def check_one_by_one(regex, text):
     # base case 1: regex is consumed
     if len(regex) == 0:
         return True
+    elif regex == '$' and len(text) == 0:
+        return True
     # base case 2: remains regex while no text
     elif len(text) == 0:
         return False
+
     # reductive step
-    return check_one_char(regex[:1], text[:1]) and check_one_by_one(regex[1:], text[1:])
+    if regex.startswith('\\'):
+        if regex[1] in '.?+*\\':
+            return check_one_char(regex[1], text[:1], literal=True) and check_one_by_one(regex[2:], text[1:])
+    else:
+        return check_one_char(regex[:1], text[:1]) and check_one_by_one(regex[1:], text[1:])
 
 
 def check_regex_plain(regex, text):
     if regex.startswith('^'):
-        regex = regex[1:]
-        text = text[:len(regex)]    # clip tail
+        return check_one_by_one(regex[1:], text)
 
-    if regex.endswith('$'):
-        regex = regex[:-1]
-        text = text[-len(regex):]  # clip head
-
-    if len(regex) > len(text):
+    if len(regex.replace('$', '').replace('\\', '')) > len(text):
         # base case: regex is longer than text
         return False
     else:
@@ -64,11 +68,11 @@ def check_regex_with_plus_sign(regex, text):
 
 
 def match(regex, text):
-    if '?' in regex:
+    if '?' in regex and ('\\?' not in regex):
         return check_regex_with_question_mark(regex, text)
-    elif '+' in regex:
+    elif '+' in regex and ('\\+' not in regex):
         return check_regex_with_plus_sign(regex, text)
-    elif '*' in regex:
+    elif '*' in regex and ('\\*' not in regex):
         return check_regex_with_star_sign(regex, text)
     return check_regex_plain(regex, text)
 
